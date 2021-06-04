@@ -41,6 +41,12 @@ namespace leave_managementPetar.Repository
             return history;
         }
 
+        public bool isExists(int id)
+        {
+            var exist = dbContext.LeaveHistorys.Any(q => q.Id == id);
+            return exist;
+        }
+
         public bool Save()
         {
             var changes = dbContext.SaveChanges();

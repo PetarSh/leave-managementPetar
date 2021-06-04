@@ -45,6 +45,12 @@ namespace leave_managementPetar.Repository
             throw new NotImplementedException();
         }
 
+        public bool isExists(int id)
+        {
+            var exist =dbContext.LeaveTypes.Any(q => q.Id == id);
+            return exist;
+        }
+
         public bool Save()
         {
             var changes= dbContext.SaveChanges();
