@@ -34,7 +34,14 @@ namespace leave_managementPetar.Controllers
         // GET: LeaveTypesController/Details/5
         public ActionResult Details(int id)
         {
-            return View();
+            if (!repo.isExists(id))
+            {
+                return NotFound();
+            }
+            var leavetype = repo.FindById(id);
+            var model = mapo.Map<LeaveTypeVM>(leavetype);
+
+            return View(model);
         }
 
         // GET: LeaveTypesController/Create
@@ -117,21 +124,44 @@ namespace leave_managementPetar.Controllers
         // GET: LeaveTypesController/Delete/5
         public ActionResult Delete(int id)
         {
-            return View();
+            var leavetype = repo.FindById(id);
+            if (leavetype == null)
+            {
+                return NotFound();
+            }
+            var isok = repo.Delete(leavetype);
+            if (!isok)
+            {
+
+                return BadRequest();
+            }
+            return RedirectToAction(nameof(Index));
         }
 
         // POST: LeaveTypesController/Delete/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Delete(int id, IFormCollection collection)
+        public ActionResult Delete(int id,LeaveTypeVM model)
         {
             try
             {
+               
+                var leavetype = repo.FindById(id);
+                if (leavetype==null)
+                {
+                    return NotFound();
+                }
+                var isok = repo.Delete(leavetype);
+                if (!isok)
+                {
+                    
+                    return View(model);
+                }
                 return RedirectToAction(nameof(Index));
             }
             catch
             {
-                return View();
+                return View(model);
             }
         }
     }
