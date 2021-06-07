@@ -2,6 +2,7 @@
 using leave_managementPetar.Contracts;
 using leave_managementPetar.Data;
 using leave_managementPetar.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System;
@@ -11,6 +12,7 @@ using System.Threading.Tasks;
 
 namespace leave_managementPetar.Controllers
 {
+    [Authorize(Roles ="Administrator")]
     public class LeaveTypesController : Controller
     {
         private readonly ILeaveTypeRepository repo;
@@ -23,6 +25,7 @@ namespace leave_managementPetar.Controllers
         }
         
         // GET: LeaveTypesController
+        
         public ActionResult Index()
         {
             var levetyps = repo.FindAll().ToList();
