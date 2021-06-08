@@ -6,7 +6,8 @@ using leave_managementPetar.Data;
 
 namespace leave_managementPetar.Contracts
 {
-    public interface ILeaveHistoryRepository:IRepositoryBase<LeaveHistory>
+    public interface ILeaveRequestRepository : IRepositoryBase<LeaveRequest>
     {
+        ICollection<LeaveRequest> GetLeaveRequestsByEmployee(string employeeid);
     }
 }
