@@ -7,7 +7,7 @@ namespace leave_managementPetar.Models
 {
     public class EmployeeVM
     {
-        public int Id { get; set; }
+        public string Id { get; set; }
         public string UserName { get; set; }
         public string Firstname { get; set; }
         public string Lastname { get; set; }

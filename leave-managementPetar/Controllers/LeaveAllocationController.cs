@@ -19,10 +19,10 @@ namespace leave_managementPetar.Controllers
         private readonly ILeaveTypeRepository typo;
         private readonly ILeaveAllocationRepository repo;
         private readonly IMapper mapo;
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<Employee> _userManager;
 
         public LeaveAllocationController(ILeaveAllocationRepository repos, IMapper mapos,
-            ILeaveTypeRepository typos, UserManager<IdentityUser> userManager)
+            ILeaveTypeRepository typos, UserManager<Employee> userManager)
         {
             repo = repos;
             mapo = mapos;
@@ -66,6 +66,18 @@ namespace leave_managementPetar.Controllers
             }
             return RedirectToAction(nameof(Index));
         }
+
+
+        public ActionResult ListEmployees()
+        {
+            var employees = _userManager.GetUsersInRoleAsync("Employee").Result;
+            var model = mapo.Map<List<EmployeeVM>>(employees);
+
+            return View(model);
+        }
+
+
+
 
         // GET: LeaveAllocationController/Details/5
         public ActionResult Details(int id)

@@ -18,7 +18,8 @@ namespace leave_managementPetar.Data
         public DbSet<LeaveType> LeaveTypes { get; set; }
         public DbSet<LeaveHistory> LeaveHistorys { get; set; }
         public DbSet<LeaveAllocation> LeaveAllocations { get; set; }
-        public DbSet<leave_managementPetar.Models.LeaveTypeVM> DetailsLeaveTypeVM { get; set; }
+        public DbSet<LeaveTypeVM> DetailsLeaveTypeVM { get; set; }
+        public DbSet<EmployeeVM> EmployeeVM { get; set; }
 
     }
 }
