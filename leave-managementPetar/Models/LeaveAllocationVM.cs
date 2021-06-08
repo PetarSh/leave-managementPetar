@@ -11,8 +11,10 @@ namespace leave_managementPetar.Models
     {
 
         public int Id { get; set; }
-        [Required]
+      
         public int NumberOfDays { get; set; }
+
+        public int Period { get; set; }
         public DateTime DateCreated { get; set; }
 
         public EmployeeVM Employee { get; set; }
@@ -23,5 +25,11 @@ namespace leave_managementPetar.Models
 
         public IEnumerable<SelectListItem> Employees { get; set; }
         public IEnumerable<SelectListItem> LeaveTypes { get; set; }
+    }
+
+    public class CreateLeaveAllocationVM
+    {
+        public int NumberUpdated { get; set; }
+        public List<LeaveTypeVM> LeaveTypes { get; set; }
     }
 }
