@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using leave_managementPetar.Contracts;
 using leave_managementPetar.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace leave_managementPetar.Repository
 {
@@ -38,14 +39,33 @@ namespace leave_managementPetar.Repository
 
         public ICollection<LeaveAllocation> FindAll()
         {
-            var alocations = dbContext.LeaveAllocations.ToList();
+            //var alocations = dbContext.LeaveAllocations.ToList();
+            //return alocations;
+            var alocations = dbContext.LeaveAllocations
+               .Include(q => q.LeaveType)
+               .Include(q => q.Employee)
+               .ToList();
             return alocations;
         }
 
         public LeaveAllocation FindById(int id)
         {
-            var alocation = dbContext.LeaveAllocations.Find(id);
+            //var alocation = dbContext.LeaveAllocations.Find(id);
+            //return alocation;
+
+            var alocation = dbContext.LeaveAllocations
+                .Include(q => q.LeaveType)
+                .Include(q => q.Employee)
+                .FirstOrDefault(q => q.Id == id);
             return alocation;
+        }
+
+        public ICollection<LeaveAllocation> GetLeaveAllocationsByEmployee(string id)
+        {
+            var period = DateTime.Now.Year;
+            return FindAll()
+                    .Where(q => q.EmployeeId == id && q.Period == period)
+                    .ToList();
         }
 
         public bool isExists(int id)

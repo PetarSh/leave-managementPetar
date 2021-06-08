@@ -9,5 +9,6 @@ namespace leave_managementPetar.Contracts
     public interface ILeaveAllocationRepository:IRepositoryBase<LeaveAllocation>
     {
         bool CheckAllocation(int leavetypeid, string employeeid);
+        ICollection<LeaveAllocation> GetLeaveAllocationsByEmployee(string id);
     }
 }
