@@ -1,5 +1,6 @@
 ﻿using leave_managementPetar.Contracts;
 using leave_managementPetar.Data;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -31,19 +32,30 @@ namespace leave_managementPetar.Repository
 
         public ICollection<LeaveRequest> FindAll()
         {
-            var histories = dbContext.LeaveRequests.ToList();
-            return histories;
+            var leaveRequests = dbContext.LeaveRequests
+                .Include(q => q.RequestingEmployee)
+                .Include(q => q.ApprovedBy)
+                .Include(q => q.LeaveType)
+                .ToList();
+            return leaveRequests;
         }
 
         public LeaveRequest FindById(int id)
         {
-            var history = dbContext.LeaveRequests.Find(id);
-            return history;
+            var leaveRequests = dbContext.LeaveRequests
+                .Include(q => q.RequestingEmployee)
+                .Include(q => q.ApprovedBy)
+                .Include(q => q.LeaveType).
+                FirstOrDefault(q => q.Id==id);
+            return leaveRequests;
         }
 
         public ICollection<LeaveRequest> GetLeaveRequestsByEmployee(string employeeid)
         {
-            throw new NotImplementedException();
+            var leaveRequests = FindAll()
+                 .Where(q => q.RequestingEmployeeId == employeeid)
+                 .ToList();
+            return leaveRequests;
         }
 
         public bool isExists(int id)
