@@ -53,11 +53,63 @@ namespace leave_managementPetar.Controllers
             return View(model);
         }
 
+        public ActionResult MyLeave()
+        {
+            var employee = _userManager.GetUserAsync(User).Result;
+            var employeeid = employee.Id;
+            var employeeAllocations = _leaveAllocRepo.GetLeaveAllocationsByEmployee(employeeid);
+            var employeeRequests = repo.GetLeaveRequestsByEmployee(employeeid);
+
+            var employeeAllocationsModel = mapo.Map<List<LeaveAllocationVM>>(employeeAllocations);
+            var employeeRequestsModel = mapo.Map<List<LeaveRequestVM>>(employeeRequests);
+
+            var model = new EmployeeLeaveRequestViewVM
+            {
+                LeaveAllocations = employeeAllocationsModel,
+                LeaveRequests = employeeRequestsModel
+            };
+
+            return View(model);
+
+        }
+
         // GET: LeaveRequestController/Details/5
         public ActionResult Details(int id)
         {
-            return View();
+            var leaveRequest = repo.FindById(id);
+            var model = mapo.Map<LeaveRequestVM>(leaveRequest);
+            return View(model);
         }
+
+        public ActionResult ApproveRequest(int id)
+        {
+            try
+            {
+                var user = _userManager.GetUserAsync(User).Result;
+                var leaveRequest = repo.FindById(id);
+                var employeeid = leaveRequest.RequestingEmployeeId;
+                var leaveTypeId = leaveRequest.LeaveTypeId;
+                var allocation = _leaveAllocRepo.GetLeaveAllocationsByEmployeeAndType(employeeid, leaveTypeId);
+                int daysRequested = (int)(leaveRequest.EndDate - leaveRequest.StartDate).TotalDays;
+                //allocation.NumberOfDays -= daysRequested;
+                allocation.NumberOfDays = allocation.NumberOfDays - daysRequested;
+
+                leaveRequest.Approved = true;
+                leaveRequest.ApprovedById = user.Id;
+                leaveRequest.DateActioned = DateTime.Now;
+
+                repo.Update(leaveRequest);
+                _leaveAllocRepo.Update(allocation);
+
+                return RedirectToAction(nameof(Index));
+
+            }
+            catch (Exception ex)
+            {
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
 
         // GET: LeaveRequestController/Create
         public ActionResult Create()
@@ -134,14 +186,22 @@ namespace leave_managementPetar.Controllers
                     return View(model);
                 }
 
-                //return RedirectToAction("MyLeave");
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction("MyLeave");
+                //return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
                 ModelState.AddModelError("", "Something went wrong with insert");
                 return View(model);
             }
+        }
+
+        public ActionResult CancelRequest(int id)
+        {
+            var leaveRequest = repo.FindById(id);
+            leaveRequest.Cancelled = true;
+            repo.Update(leaveRequest);
+            return RedirectToAction("MyLeave");
         }
 
         // GET: LeaveRequestController/Edit/5

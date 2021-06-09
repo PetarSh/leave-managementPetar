@@ -6,9 +6,9 @@
 }
 
 @*<h1>Leave Apllications</h1>*@
-<p>
+@*<p>
     <a asp-action="Create" class="btn btn-success"> <i class="fa fa-plus" aria-hidden="true"></i> Create New Request</a>
-</p>
+</p>*@
 
 <div class="row">
     <div class="col-md-3">
@@ -99,26 +99,28 @@
                 <td>
                     @if (item.Cancelled)
                     {
-                        <span class="badge badge-secondary">Cancelled</span>
+                        <span class="badge badge-secondary" style="padding:6px">Cancelled</span>
                     }
                     else if (item.Approved == true)
                     {
-                        <span class="badge badge-success">Approved</span>
+                        <span class="badge badge-success" style="padding:6px">Approved</span>
                     }
                     else if (item.Approved == false)
                     {
-                        <span class="badge badge-danger">Rejected</span>
+                        <span class="badge badge-danger" style="padding:6px">Rejected</span>
                     }
                     else
                     {
-                        <span class="badge badge-warning">Pending Approval</span>
+                        <span class="badge badge-warning" style="padding:6px">Pending Approval</span>
                     }
                 </td>
 
                 <td>
-                    <a asp-action="Edit" asp-route-id="@item.Id">Edit</a>
-                    <a asp-action="Details" asp-route-id="@item.Id">Details</a>
-                    <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                    
+                    <a class="btn btn-outline-primary" asp-action="Details" asp-route-id="@item.Id">
+                    <i class="fa fa-file"></i>
+                    Review</a>
+                   
                 </td>
             </tr>
         }
