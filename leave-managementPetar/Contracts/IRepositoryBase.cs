@@ -8,14 +8,14 @@ namespace leave_managementPetar.Contracts
 {
     public interface IRepositoryBase<T> where T : class
     {
-        ICollection<T> FindAll();
+       Task<ICollection<T>> FindAll();
 
-        bool isExists(int id);
-        T FindById(int id);
-        bool Create(T entity);
-        bool Update(T entity);
-        bool Delete(T entity);
-        bool Save();
+        Task<bool> isExists(int id);
+        Task<T> FindById(int id);
+        Task<bool> Create(T entity);
+        Task<bool> Update(T entity);
+        Task<bool> Delete(T entity);
+        Task<bool> Save();
     }
    
 
