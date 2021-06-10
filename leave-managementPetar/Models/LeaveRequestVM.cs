@@ -46,7 +46,7 @@ namespace leave_managementPetar.Models
 
     public class AdminLeaveRequestViewVM
     {
-        [Display(Name = "Total Number Of Requests")]
+        [Display(Name = "Number Of Requests")]
         public int TotalRequests { get; set; }
         [Display(Name = "Approved Requests")]
         public int ApprovedRequests { get; set; }
