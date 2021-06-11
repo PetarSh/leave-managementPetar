@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using leave_management.Contracts;
 using leave_managementPetar.Contracts;
 using leave_managementPetar.Data;
 using leave_managementPetar.Models;
@@ -17,30 +18,26 @@ namespace leave_managementPetar.Controllers
     [Authorize]
     public class LeaveRequestController : Controller
     {
-        private readonly ILeaveRequestRepository repo;
-        private readonly ILeaveTypeRepository _leaveTypeRepo;
-        private readonly ILeaveAllocationRepository _leaveAllocRepo;
+        private readonly IUnitOfWork _unitOfwork;
         private readonly IMapper mapo;
         private readonly UserManager<Employee> _userManager;
 
-        public LeaveRequestController(ILeaveRequestRepository repos, 
+        public LeaveRequestController( 
             IMapper mapos,
             UserManager<Employee> userManager,
-            ILeaveTypeRepository leaveTypeRepo,
-            ILeaveAllocationRepository leaveAllocRepo)
+            IUnitOfWork unitOfwork)
         {
-            repo = repos;
-            mapo = mapos;
             _userManager = userManager;
-            _leaveTypeRepo = leaveTypeRepo;
-            _leaveAllocRepo = leaveAllocRepo;
+            mapo = mapos;
+            _unitOfwork = unitOfwork;
         }
 
         [Authorize(Roles = "Administrator")]
         // GET: LeaveRequestController
         public async Task<ActionResult> Index()
         {
-            var leaveRequests =await repo.FindAll();
+            var leaveRequests = await _unitOfwork.LeaveRequests.FindAll(
+                includes: new List<string> { "RequestingEmployee", "LeaveType" });
             var leaveRequstsModel = mapo.Map<List<LeaveRequestVM>>(leaveRequests);
             var model = new AdminLeaveRequestViewVM
             {
@@ -57,8 +54,14 @@ namespace leave_managementPetar.Controllers
         {
             var employee =await _userManager.GetUserAsync(User);
             var employeeid = employee.Id;
-            var employeeAllocations =await _leaveAllocRepo.GetLeaveAllocationsByEmployee(employeeid);
-            var employeeRequests =await repo.GetLeaveRequestsByEmployee(employeeid);
+            //var employeeAllocations =await _leaveAllocRepo.GetLeaveAllocationsByEmployee(employeeid);
+            //var employeeRequests =await repo.GetLeaveRequestsByEmployee(employeeid);
+
+            var employeeAllocations = await _unitOfwork.LeaveAllocations.FindAll(q => q.EmployeeId == employeeid,
+               includes: new List<string> { "LeaveType" });
+
+            var employeeRequests = await _unitOfwork.LeaveRequests
+                .FindAll(q => q.RequestingEmployeeId == employeeid);
 
             var employeeAllocationsModel = mapo.Map<List<LeaveAllocationVM>>(employeeAllocations);
             var employeeRequestsModel = mapo.Map<List<LeaveRequestVM>>(employeeRequests);
@@ -76,7 +79,9 @@ namespace leave_managementPetar.Controllers
         // GET: LeaveRequestController/Details/5
         public async Task<ActionResult> Details(int id)
         {
-            var leaveRequest =await repo.FindById(id);
+            //var leaveRequest =await repo.FindById(id);
+            var leaveRequest = await _unitOfwork.LeaveRequests.Find(q => q.Id == id,
+               includes: new List<string> { "ApprovedBy", "RequestingEmployee", "LeaveType" });
             var model = mapo.Map<LeaveRequestVM>(leaveRequest);
             return View(model);
         }
@@ -86,10 +91,16 @@ namespace leave_managementPetar.Controllers
             try
             {
                 var user =await _userManager.GetUserAsync(User);
-                var leaveRequest =await repo.FindById(id);
+                //var leaveRequest =await repo.FindById(id);
+                var leaveRequest = await _unitOfwork.LeaveRequests.Find(q => q.Id == id);
                 var employeeid = leaveRequest.RequestingEmployeeId;
                 var leaveTypeId = leaveRequest.LeaveTypeId;
-                var allocation =await _leaveAllocRepo.GetLeaveAllocationsByEmployeeAndType(employeeid, leaveTypeId);
+                var period = DateTime.Now.Year;
+                //var allocation =await _leaveAllocRepo.GetLeaveAllocationsByEmployeeAndType(employeeid, leaveTypeId);
+                var allocation = await _unitOfwork.LeaveAllocations.Find(q => q.EmployeeId == employeeid
+                                                    && q.Period == period
+                                                    && q.LeaveTypeId == leaveTypeId);
+
                 int daysRequested = (int)(leaveRequest.EndDate - leaveRequest.StartDate).TotalDays;
                 
                 allocation.NumberOfDays = allocation.NumberOfDays - daysRequested;
@@ -98,8 +109,11 @@ namespace leave_managementPetar.Controllers
                 leaveRequest.ApprovedById = user.Id;
                 leaveRequest.DateActioned = DateTime.Now;
 
-                await repo.Update(leaveRequest);
-                await _leaveAllocRepo.Update(allocation);
+                //await repo.Update(leaveRequest);
+                //await _leaveAllocRepo.Update(allocation);
+                _unitOfwork.LeaveRequests.Update(leaveRequest);
+                _unitOfwork.LeaveAllocations.Update(allocation);
+                await _unitOfwork.Save();
 
                 return RedirectToAction(nameof(Index));
 
@@ -115,12 +129,15 @@ namespace leave_managementPetar.Controllers
             try
             {
                 var user = await _userManager.GetUserAsync(User);
-                var leaveRequest = await repo.FindById(id);
+                //var leaveRequest = await repo.FindById(id);
+                var leaveRequest = await _unitOfwork.LeaveRequests.Find(q => q.Id == id);
                 leaveRequest.Approved = false;
                 leaveRequest.ApprovedById = user.Id;
                 leaveRequest.DateActioned = DateTime.Now;
 
-                await repo.Update(leaveRequest);
+                //await repo.Update(leaveRequest);
+                _unitOfwork.LeaveRequests.Update(leaveRequest);
+                await _unitOfwork.Save();
                 return RedirectToAction(nameof(Index));
 
             }
@@ -133,7 +150,8 @@ namespace leave_managementPetar.Controllers
             // GET: LeaveRequestController/Create
         public async Task<ActionResult> Create()
         {
-            var leaveTypes =await _leaveTypeRepo.FindAll();
+            //var leaveTypes =await _leaveTypeRepo.FindAll();
+            var leaveTypes = await _unitOfwork.LeaveTypes.FindAll();
             var leaveTypeItems = leaveTypes.Select(q => new SelectListItem
             {
                 Text = q.Name,
@@ -154,9 +172,15 @@ namespace leave_managementPetar.Controllers
             try
             {
                 var startDate = Convert.ToDateTime(model.StartDate);
-               
                 var endDate = Convert.ToDateTime(model.EndDate);
-                var leaveTypes =await _leaveTypeRepo.FindAll();
+                var leaveTypes = await _unitOfwork.LeaveTypes.FindAll();
+
+                var employee = await _userManager.GetUserAsync(User);
+                var period = DateTime.Now.Year;
+                var allocation = await _unitOfwork.LeaveAllocations.Find(q => q.EmployeeId == employee.Id
+                                                    && q.Period == period
+                                                    && q.LeaveTypeId == model.LeaveTypeId);
+                int daysRequested = (int)(endDate - startDate).TotalDays;
                 var leaveTypeItems = leaveTypes.Select(q => new SelectListItem
                 {
                     Text = q.Name,
@@ -164,24 +188,21 @@ namespace leave_managementPetar.Controllers
                 });
                 model.LeaveTypes = leaveTypeItems;
 
-                if (!ModelState.IsValid)
+
+                if (allocation == null)
                 {
-                    return View(model);
+                    ModelState.AddModelError("", "You Have No Days Left");
                 }
-                
                 if (DateTime.Compare(startDate, endDate) > 1)
                 {
-                    ModelState.AddModelError("", "Start Date cannot be further in the future than the End Date!");
-                    return View(model);
+                    ModelState.AddModelError("", "Start Date cannot be further in the future than the End Date");
                 }
-
-                var employee =await _userManager.GetUserAsync(User);
-                var allocation =await _leaveAllocRepo.GetLeaveAllocationsByEmployeeAndType(employee.Id, model.LeaveTypeId);
-                int daysRequested = (int)(endDate - startDate).TotalDays;
-
                 if (daysRequested > allocation.NumberOfDays)
                 {
-                    ModelState.AddModelError("", "You Do Not have Sufficient Days For This Request!");
+                    ModelState.AddModelError("", "You Do Not Sufficient Days For This Request");
+                }
+                if (!ModelState.IsValid)
+                {
                     return View(model);
                 }
 
@@ -198,16 +219,11 @@ namespace leave_managementPetar.Controllers
                 };
 
                 var leaveRequest = mapo.Map<LeaveRequest>(leaveRequestModel);
-                var isSuccess =await repo.Create(leaveRequest);
+                await _unitOfwork.LeaveRequests.Create(leaveRequest);
+                await _unitOfwork.Save();
 
-                if (!isSuccess)
-                {
-                    ModelState.AddModelError("", "Something went wrong with submitting your record");
-                    return View(model);
-                }
 
                 return RedirectToAction("MyLeave");
-                //return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
@@ -218,9 +234,11 @@ namespace leave_managementPetar.Controllers
 
         public async Task< ActionResult> CancelRequest(int id)
         {
-            var leaveRequest =await repo.FindById(id);
+            //var leaveRequest =await repo.FindById(id);
+            var leaveRequest = await _unitOfwork.LeaveRequests.Find(q => q.Id == id);
             leaveRequest.Cancelled = true;
-            await repo.Update(leaveRequest);
+            _unitOfwork.LeaveRequests.Update(leaveRequest);
+            await _unitOfwork.Save();
             return RedirectToAction("MyLeave");
         }
 

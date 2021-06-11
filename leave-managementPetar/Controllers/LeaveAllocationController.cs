@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using leave_management.Contracts;
 using leave_managementPetar.Contracts;
 using leave_managementPetar.Data;
 using leave_managementPetar.Models;
@@ -16,17 +17,16 @@ namespace leave_managementPetar.Controllers
     [Authorize(Roles = "Administrator")]
     public class LeaveAllocationController : Controller
     {
-        private readonly ILeaveTypeRepository typo;
-        private readonly ILeaveAllocationRepository repo;
+        private readonly IUnitOfWork _unitOfwork;
         private readonly IMapper mapo;
         private readonly UserManager<Employee> _userManager;
 
-        public LeaveAllocationController(ILeaveAllocationRepository repos, IMapper mapos,
-            ILeaveTypeRepository typos, UserManager<Employee> userManager)
+        public LeaveAllocationController( IMapper mapos,
+           IUnitOfWork unitOfwork, UserManager<Employee> userManager)
         {
-            repo = repos;
+            
             mapo = mapos;
-            typo = typos;
+            _unitOfwork = unitOfwork;
             _userManager = userManager;
         }
 
@@ -34,8 +34,9 @@ namespace leave_managementPetar.Controllers
         // GET: LeaveAllocationController
         public async Task<ActionResult> Index()
         {
-            var levetyps =await typo.FindAll();
-            var mappedLeaveTypes = mapo.Map<List<LeaveType>, List<LeaveTypeVM>>(levetyps.ToList());
+            //var levetyps =await typo.FindAll();
+            var leavetypes = await _unitOfwork.LeaveTypes.FindAll();
+            var mappedLeaveTypes = mapo.Map<List<LeaveType>, List<LeaveTypeVM>>(leavetypes.ToList());
             var model = new CreateLeaveAllocationVM
             {
                 LeaveTypes = mappedLeaveTypes,
@@ -47,11 +48,16 @@ namespace leave_managementPetar.Controllers
 
         public async Task<ActionResult> SetLeave(int id)
         {
-            var leavetype =await typo.FindById(id);
+            //var leavetype =await typo.FindById(id);
+            var leavetype = await _unitOfwork.LeaveTypes.Find(q => q.Id == id);
             var employees =await _userManager.GetUsersInRoleAsync("Employee");
+            var period = DateTime.Now.Year;
             foreach (var emp in employees)
             {
-                if (await repo.CheckAllocation(id, emp.Id))
+                //if (await _leaveallocationrepo.CheckAllocation(id, emp.Id))
+                if (await _unitOfwork.LeaveAllocations.isExists(q => q.EmployeeId == emp.Id
+                                        && q.LeaveTypeId == id
+                                        && q.Period == period))
                     continue;
                 var allocation = new LeaveAllocationVM
                 {
@@ -62,7 +68,9 @@ namespace leave_managementPetar.Controllers
                     Period = DateTime.Now.Year
                 };
                 var leaveallocation = mapo.Map<LeaveAllocation>(allocation);
-                await repo.Create(leaveallocation);
+                //await _leaveallocationrepo.Create(leaveallocation);
+                await _unitOfwork.LeaveAllocations.Create(leaveallocation);
+                await _unitOfwork.Save();
             }
             return RedirectToAction(nameof(Index));
         }
@@ -83,7 +91,13 @@ namespace leave_managementPetar.Controllers
         public async Task<ActionResult> Details(string id)
         {
             var employee = mapo.Map<EmployeeVM>(await _userManager.FindByIdAsync(id));
-            var allocations = mapo.Map<List<LeaveAllocationVM>>( await repo.GetLeaveAllocationsByEmployee(id));
+            //var allocations = mapo.Map<List<LeaveAllocationVM>>( await repo.GetLeaveAllocationsByEmployee(id));
+            var period = DateTime.Now.Year;
+            var records = await _unitOfwork.LeaveAllocations.FindAll(
+               expression: q => q.EmployeeId == id && q.Period == period,
+               includes: new List<string> { "LeaveType" }
+           );
+            var allocations = mapo.Map<List<LeaveAllocationVM>>(records);
             var model = new ViewAllocationsVM
             {
                 Employee = employee,
@@ -116,7 +130,9 @@ namespace leave_managementPetar.Controllers
         // GET: LeaveAllocationController/Edit/5
         public async Task<ActionResult> Edit(int id)
         {
-            var leaveallocation =await repo.FindById(id);
+            //var leaveallocation =await repo.FindById(id);
+            var leaveallocation = await _unitOfwork.LeaveAllocations.Find(q => q.Id == id,
+                includes: new List<string> { "Employee", "LeaveType" });
             var model = mapo.Map<EditLeaveAllocationVM>(leaveallocation);
             return View(model);
         }
@@ -132,14 +148,11 @@ namespace leave_managementPetar.Controllers
                 {
                     return View(model);
                 }
-                var record =await repo.FindById(model.Id);
+                //var record =await repo.FindById(model.Id);
+                var record = await _unitOfwork.LeaveAllocations.Find(q => q.Id == model.Id);
                 record.NumberOfDays = model.NumberOfDays;
-                var isSuccess =await repo.Update(record);
-                if (!isSuccess)
-                {
-                    ModelState.AddModelError("", "Error while saving");
-                    return View(model);
-                }
+                _unitOfwork.LeaveAllocations.Update(record);
+                await _unitOfwork.Save();
                 return RedirectToAction(nameof(Details), new { id = model.EmployeeId });
             }
             catch

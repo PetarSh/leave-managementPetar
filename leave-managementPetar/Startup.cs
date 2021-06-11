@@ -1,4 +1,5 @@
 using AutoMapper;
+using leave_management.Contracts;
 using leave_managementPetar.Contracts;
 using leave_managementPetar.Data;
 using leave_managementPetar.Mappings;
@@ -35,11 +36,15 @@ namespace leave_managementPetar
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(
                     Configuration.GetConnectionString("DefaultConnection")));
-            //dodavanje na repository vo service
 
+
+            //dodavanje na repository vo service
             services.AddScoped<ILeaveTypeRepository, LeaveTypeRepository>();
             services.AddScoped<ILeaveRequestRepository, LeaveRequestRepository>();
             services.AddScoped<ILeaveAllocationRepository, LeaveAllocationRepository>();
+            //dodavanje na iunit of work
+            services.AddTransient<IUnitOfWork, UnitOfWork>();
+
             services.AddAutoMapper(typeof(Maps));
 
             services.AddDefaultIdentity<Employee>()

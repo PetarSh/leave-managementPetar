@@ -1,7 +1,9 @@
 ﻿using AutoMapper;
+using leave_management.Contracts;
 using leave_managementPetar.Contracts;
 using leave_managementPetar.Data;
 using leave_managementPetar.Models;
+using leave_managementPetar.Repository;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -16,11 +18,13 @@ namespace leave_managementPetar.Controllers
     public class LeaveTypesController : Controller
     {
         private readonly ILeaveTypeRepository repo;
+        private readonly IUnitOfWork _unitOfwork;
         private readonly IMapper mapo;
 
-        public LeaveTypesController(ILeaveTypeRepository repos, IMapper mapos)
+        public LeaveTypesController(ILeaveTypeRepository repos,IUnitOfWork unitOfWork, IMapper mapos)
         {
             repo = repos;
+            _unitOfwork = unitOfWork;
             mapo = mapos;
         }
         
@@ -28,7 +32,7 @@ namespace leave_managementPetar.Controllers
         
         public async Task< ActionResult> Index()
         {
-            var levetyps = await repo.FindAll();
+            var levetyps = await _unitOfwork.LeaveTypes.FindAll();
             var model = mapo.Map < List<LeaveType>, List<LeaveTypeVM>>(levetyps.ToList());
 
             return View(model);
@@ -37,12 +41,13 @@ namespace leave_managementPetar.Controllers
         // GET: LeaveTypesController/Details/5
         public async Task<ActionResult> Details(int id)
         {
-            var isExists = await repo.isExists(id);
+            //var isExists = await repo.isExists(id);
+            var isExists = await _unitOfwork.LeaveTypes.isExists(q=>q.Id==id);
             if (!isExists)
             {
                 return NotFound();
             }
-            var leavetype = await repo.FindById(id);
+            var leavetype = await _unitOfwork.LeaveTypes.Find(q=>q.Id==id);
             var model = mapo.Map<LeaveTypeVM>(leavetype);
 
             return View(model);
@@ -67,12 +72,13 @@ namespace leave_managementPetar.Controllers
                 }
                 var leavetype = mapo.Map<LeaveType>(model);
                 leavetype.DateCreated = DateTime.Now;
-                var isok= await repo.Create(leavetype);
-                if(!isok)
-                {
-                    ModelState.AddModelError("", "something went wrong with insert");
-                    return View(model);
-                }
+                await _unitOfwork.LeaveTypes.Create(leavetype);
+                await _unitOfwork.Save();
+                //if (!isok)
+                //{
+                //    ModelState.AddModelError("", "something went wrong with insert");
+                //    return View(model);
+                //}
 
 
                 return RedirectToAction(nameof(Index));
@@ -86,15 +92,15 @@ namespace leave_managementPetar.Controllers
         // GET: LeaveTypesController/Edit/5
         public async Task<ActionResult> Edit(int id)
         {
-            var isExists = await repo.isExists(id);
+            //var isExists = await _repo.isExists(id);
+            var isExists = await _unitOfwork.LeaveTypes.isExists(q => q.Id == id);
             if (!isExists)
             {
-               return NotFound();
+                return NotFound();
             }
-
-            var leavetype =await repo.FindById(id);
+            //var leavetype = await _repo.FindById(id);
+            var leavetype = await _unitOfwork.LeaveTypes.Find(q => q.Id == id);
             var model = mapo.Map<LeaveTypeVM>(leavetype);
-
             return View(model);
         }
 
@@ -111,12 +117,14 @@ namespace leave_managementPetar.Controllers
                 }
                 var leavetype = mapo.Map<LeaveType>(model);
                 leavetype.DateCreated = DateTime.Now;
-                var isok =await repo.Update(leavetype);
-                if (!isok)
-                {
-                    ModelState.AddModelError("", "something went wrong with update");
-                    return View(model);
-                }
+                _unitOfwork.LeaveTypes.Update(leavetype);
+                await _unitOfwork.Save();
+                //var isok =await repo.Update(leavetype);
+                //if (!isok)
+                //{
+                //    ModelState.AddModelError("", "something went wrong with update");
+                //    return View(model);
+                //}
                 return RedirectToAction(nameof(Index));
             }
             catch
@@ -129,18 +137,18 @@ namespace leave_managementPetar.Controllers
         // GET: LeaveTypesController/Delete/5
         public async Task<ActionResult> Delete(int id)
         {
-            var leavetype =await repo.FindById(id);
+            var leavetype = await _unitOfwork.LeaveTypes.Find(expression: q => q.Id == id);
             if (leavetype == null)
             {
                 return NotFound();
             }
-            var isok =await repo.Delete(leavetype);
-            if (!isok)
-            {
-
-                return BadRequest();
-            }
+            _unitOfwork.LeaveTypes.Delete(leavetype);
+            await _unitOfwork.Save();
             return RedirectToAction(nameof(Index));
+
+
+
+           
         }
 
         // POST: LeaveTypesController/Delete/5
@@ -150,24 +158,26 @@ namespace leave_managementPetar.Controllers
         {
             try
             {
-               
-                var leavetype =await repo.FindById(id);
-                if (leavetype==null)
+
+                var leavetype = await _unitOfwork.LeaveTypes.Find(expression: q => q.Id == id);
+                if (leavetype == null)
                 {
                     return NotFound();
                 }
-                var isok =await repo.Delete(leavetype);
-                if (!isok)
-                {
-                    
-                    return View(model);
-                }
+                _unitOfwork.LeaveTypes.Delete(leavetype);
+                await _unitOfwork.Save();
+
                 return RedirectToAction(nameof(Index));
             }
             catch
             {
                 return View(model);
             }
+        }
+        protected override void Dispose(bool disposing)
+        {
+            _unitOfwork.Dispose();
+            base.Dispose(disposing);
         }
     }
 }
