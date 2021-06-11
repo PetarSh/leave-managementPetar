@@ -134,27 +134,23 @@ namespace leave_managementPetar.Controllers
             }
         }
 
-        // GET: LeaveTypesController/Delete/5
-        public async Task<ActionResult> Delete(int id)
-        {
-            var leavetype = await _unitOfwork.LeaveTypes.Find(expression: q => q.Id == id);
-            if (leavetype == null)
-            {
-                return NotFound();
-            }
-            _unitOfwork.LeaveTypes.Delete(leavetype);
-            await _unitOfwork.Save();
-            return RedirectToAction(nameof(Index));
-
-
-
-           
-        }
+        //GET: LeaveTypesController/Delete/5
+        //public async Task<ActionResult> Delete(int id)
+        //{
+        //    var leavetype = await _unitOfwork.LeaveTypes.Find(expression: q => q.Id == id);
+        //    if (leavetype == null)
+        //    {
+        //        return NotFound();
+        //    }
+        //    _unitOfwork.LeaveTypes.Delete(leavetype);
+        //    await _unitOfwork.Save();
+        //    return RedirectToAction(nameof(Index));
+        //}
 
         // POST: LeaveTypesController/Delete/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> Delete(int id,LeaveTypeVM model)
+        public async Task<ActionResult> Delete(int id)
         {
             try
             {
@@ -171,8 +167,9 @@ namespace leave_managementPetar.Controllers
             }
             catch
             {
-                return View(model);
+                
             }
+            return RedirectToAction(nameof(Index));
         }
         protected override void Dispose(bool disposing)
         {
