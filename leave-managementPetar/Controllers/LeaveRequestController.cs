@@ -38,9 +38,9 @@ namespace leave_managementPetar.Controllers
 
         [Authorize(Roles = "Administrator")]
         // GET: LeaveRequestController
-        public ActionResult Index()
+        public async Task<ActionResult> Index()
         {
-            var leaveRequests = repo.FindAll();
+            var leaveRequests =await repo.FindAll();
             var leaveRequstsModel = mapo.Map<List<LeaveRequestVM>>(leaveRequests);
             var model = new AdminLeaveRequestViewVM
             {
@@ -53,12 +53,12 @@ namespace leave_managementPetar.Controllers
             return View(model);
         }
 
-        public ActionResult MyLeave()
+        public async Task<ActionResult> MyLeave()
         {
-            var employee = _userManager.GetUserAsync(User).Result;
+            var employee =await _userManager.GetUserAsync(User);
             var employeeid = employee.Id;
-            var employeeAllocations = _leaveAllocRepo.GetLeaveAllocationsByEmployee(employeeid);
-            var employeeRequests = repo.GetLeaveRequestsByEmployee(employeeid);
+            var employeeAllocations =await _leaveAllocRepo.GetLeaveAllocationsByEmployee(employeeid);
+            var employeeRequests =await repo.GetLeaveRequestsByEmployee(employeeid);
 
             var employeeAllocationsModel = mapo.Map<List<LeaveAllocationVM>>(employeeAllocations);
             var employeeRequestsModel = mapo.Map<List<LeaveRequestVM>>(employeeRequests);
@@ -74,32 +74,32 @@ namespace leave_managementPetar.Controllers
         }
 
         // GET: LeaveRequestController/Details/5
-        public ActionResult Details(int id)
+        public async Task<ActionResult> Details(int id)
         {
-            var leaveRequest = repo.FindById(id);
+            var leaveRequest =await repo.FindById(id);
             var model = mapo.Map<LeaveRequestVM>(leaveRequest);
             return View(model);
         }
 
-        public ActionResult ApproveRequest(int id)
+        public async Task<ActionResult> ApproveRequest(int id)
         {
             try
             {
-                var user = _userManager.GetUserAsync(User).Result;
-                var leaveRequest = repo.FindById(id);
+                var user =await _userManager.GetUserAsync(User);
+                var leaveRequest =await repo.FindById(id);
                 var employeeid = leaveRequest.RequestingEmployeeId;
                 var leaveTypeId = leaveRequest.LeaveTypeId;
-                var allocation = _leaveAllocRepo.GetLeaveAllocationsByEmployeeAndType(employeeid, leaveTypeId);
+                var allocation =await _leaveAllocRepo.GetLeaveAllocationsByEmployeeAndType(employeeid, leaveTypeId);
                 int daysRequested = (int)(leaveRequest.EndDate - leaveRequest.StartDate).TotalDays;
-                //allocation.NumberOfDays -= daysRequested;
+                
                 allocation.NumberOfDays = allocation.NumberOfDays - daysRequested;
 
                 leaveRequest.Approved = true;
                 leaveRequest.ApprovedById = user.Id;
                 leaveRequest.DateActioned = DateTime.Now;
 
-                repo.Update(leaveRequest);
-                _leaveAllocRepo.Update(allocation);
+                await repo.Update(leaveRequest);
+                await _leaveAllocRepo.Update(allocation);
 
                 return RedirectToAction(nameof(Index));
 
@@ -110,11 +110,30 @@ namespace leave_managementPetar.Controllers
             }
         }
 
-
-        // GET: LeaveRequestController/Create
-        public ActionResult Create()
+        public async Task<ActionResult> RejectRequest(int id)
         {
-            var leaveTypes = _leaveTypeRepo.FindAll();
+            try
+            {
+                var user = await _userManager.GetUserAsync(User);
+                var leaveRequest = await repo.FindById(id);
+                leaveRequest.Approved = false;
+                leaveRequest.ApprovedById = user.Id;
+                leaveRequest.DateActioned = DateTime.Now;
+
+                await repo.Update(leaveRequest);
+                return RedirectToAction(nameof(Index));
+
+            }
+            catch (Exception ex)
+            {
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
+            // GET: LeaveRequestController/Create
+        public async Task<ActionResult> Create()
+        {
+            var leaveTypes =await _leaveTypeRepo.FindAll();
             var leaveTypeItems = leaveTypes.Select(q => new SelectListItem
             {
                 Text = q.Name,
@@ -130,13 +149,14 @@ namespace leave_managementPetar.Controllers
         // POST: LeaveRequestController/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create(CreateLeaveRequestVM model)
+        public async Task<ActionResult> Create(CreateLeaveRequestVM model)
         {
             try
             {
                 var startDate = Convert.ToDateTime(model.StartDate);
+               
                 var endDate = Convert.ToDateTime(model.EndDate);
-                var leaveTypes = _leaveTypeRepo.FindAll();
+                var leaveTypes =await _leaveTypeRepo.FindAll();
                 var leaveTypeItems = leaveTypes.Select(q => new SelectListItem
                 {
                     Text = q.Name,
@@ -155,8 +175,8 @@ namespace leave_managementPetar.Controllers
                     return View(model);
                 }
 
-                var employee = _userManager.GetUserAsync(User).Result;
-                var allocation = _leaveAllocRepo.GetLeaveAllocationsByEmployeeAndType(employee.Id, model.LeaveTypeId);
+                var employee =await _userManager.GetUserAsync(User);
+                var allocation =await _leaveAllocRepo.GetLeaveAllocationsByEmployeeAndType(employee.Id, model.LeaveTypeId);
                 int daysRequested = (int)(endDate - startDate).TotalDays;
 
                 if (daysRequested > allocation.NumberOfDays)
@@ -178,7 +198,7 @@ namespace leave_managementPetar.Controllers
                 };
 
                 var leaveRequest = mapo.Map<LeaveRequest>(leaveRequestModel);
-                var isSuccess = repo.Create(leaveRequest);
+                var isSuccess =await repo.Create(leaveRequest);
 
                 if (!isSuccess)
                 {
@@ -196,11 +216,11 @@ namespace leave_managementPetar.Controllers
             }
         }
 
-        public ActionResult CancelRequest(int id)
+        public async Task< ActionResult> CancelRequest(int id)
         {
-            var leaveRequest = repo.FindById(id);
+            var leaveRequest =await repo.FindById(id);
             leaveRequest.Cancelled = true;
-            repo.Update(leaveRequest);
+            await repo.Update(leaveRequest);
             return RedirectToAction("MyLeave");
         }
 

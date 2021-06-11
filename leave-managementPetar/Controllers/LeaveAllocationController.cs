@@ -32,10 +32,10 @@ namespace leave_managementPetar.Controllers
 
 
         // GET: LeaveAllocationController
-        public ActionResult Index()
+        public async Task<ActionResult> Index()
         {
-            var levetyps = typo.FindAll().ToList();
-            var mappedLeaveTypes = mapo.Map<List<LeaveType>, List<LeaveTypeVM>>(levetyps);
+            var levetyps =await typo.FindAll();
+            var mappedLeaveTypes = mapo.Map<List<LeaveType>, List<LeaveTypeVM>>(levetyps.ToList());
             var model = new CreateLeaveAllocationVM
             {
                 LeaveTypes = mappedLeaveTypes,
@@ -45,13 +45,13 @@ namespace leave_managementPetar.Controllers
             return View(model);
         }
 
-        public ActionResult SetLeave(int id)
+        public async Task<ActionResult> SetLeave(int id)
         {
-            var leavetype = typo.FindById(id);
-            var employees = _userManager.GetUsersInRoleAsync("Employee").Result;
+            var leavetype =await typo.FindById(id);
+            var employees =await _userManager.GetUsersInRoleAsync("Employee");
             foreach (var emp in employees)
             {
-                if (repo.CheckAllocation(id, emp.Id))
+                if (await repo.CheckAllocation(id, emp.Id))
                     continue;
                 var allocation = new LeaveAllocationVM
                 {
@@ -62,15 +62,15 @@ namespace leave_managementPetar.Controllers
                     Period = DateTime.Now.Year
                 };
                 var leaveallocation = mapo.Map<LeaveAllocation>(allocation);
-                repo.Create(leaveallocation);
+                await repo.Create(leaveallocation);
             }
             return RedirectToAction(nameof(Index));
         }
 
 
-        public ActionResult ListEmployees()
+        public async Task<ActionResult> ListEmployees()
         {
-            var employees = _userManager.GetUsersInRoleAsync("Employee").Result;
+            var employees =await _userManager.GetUsersInRoleAsync("Employee");
             var model = mapo.Map<List<EmployeeVM>>(employees);
 
             return View(model);
@@ -80,10 +80,10 @@ namespace leave_managementPetar.Controllers
 
 
         // GET: LeaveAllocationController/Details/5
-        public ActionResult Details(string id)
+        public async Task<ActionResult> Details(string id)
         {
-            var employee = mapo.Map<EmployeeVM>(_userManager.FindByIdAsync(id).Result);
-            var allocations = mapo.Map<List<LeaveAllocationVM>>(repo.GetLeaveAllocationsByEmployee(id));
+            var employee = mapo.Map<EmployeeVM>(await _userManager.FindByIdAsync(id));
+            var allocations = mapo.Map<List<LeaveAllocationVM>>( await repo.GetLeaveAllocationsByEmployee(id));
             var model = new ViewAllocationsVM
             {
                 Employee = employee,
@@ -114,9 +114,9 @@ namespace leave_managementPetar.Controllers
         }
 
         // GET: LeaveAllocationController/Edit/5
-        public ActionResult Edit(int id)
+        public async Task<ActionResult> Edit(int id)
         {
-            var leaveallocation = repo.FindById(id);
+            var leaveallocation =await repo.FindById(id);
             var model = mapo.Map<EditLeaveAllocationVM>(leaveallocation);
             return View(model);
         }
@@ -124,7 +124,7 @@ namespace leave_managementPetar.Controllers
         // POST: LeaveAllocationController/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit(EditLeaveAllocationVM model)
+        public async Task<ActionResult> Edit(EditLeaveAllocationVM model)
         {
             try
             {
@@ -132,9 +132,9 @@ namespace leave_managementPetar.Controllers
                 {
                     return View(model);
                 }
-                var record = repo.FindById(model.Id);
+                var record =await repo.FindById(model.Id);
                 record.NumberOfDays = model.NumberOfDays;
-                var isSuccess = repo.Update(record);
+                var isSuccess =await repo.Update(record);
                 if (!isSuccess)
                 {
                     ModelState.AddModelError("", "Error while saving");

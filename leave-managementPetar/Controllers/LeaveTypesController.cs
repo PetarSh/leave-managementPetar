@@ -26,22 +26,23 @@ namespace leave_managementPetar.Controllers
         
         // GET: LeaveTypesController
         
-        public ActionResult Index()
+        public async Task< ActionResult> Index()
         {
-            var levetyps = repo.FindAll().ToList();
-            var model = mapo.Map < List<LeaveType>, List<LeaveTypeVM>>(levetyps);
+            var levetyps = await repo.FindAll();
+            var model = mapo.Map < List<LeaveType>, List<LeaveTypeVM>>(levetyps.ToList());
 
             return View(model);
         }
 
         // GET: LeaveTypesController/Details/5
-        public ActionResult Details(int id)
+        public async Task<ActionResult> Details(int id)
         {
-            if (!repo.isExists(id))
+            var isExists = await repo.isExists(id);
+            if (!isExists)
             {
                 return NotFound();
             }
-            var leavetype = repo.FindById(id);
+            var leavetype = await repo.FindById(id);
             var model = mapo.Map<LeaveTypeVM>(leavetype);
 
             return View(model);
@@ -56,7 +57,7 @@ namespace leave_managementPetar.Controllers
         // POST: LeaveTypesController/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create(LeaveTypeVM model)
+        public async Task<ActionResult> Create(LeaveTypeVM model)
         {
             try
             {
@@ -66,7 +67,7 @@ namespace leave_managementPetar.Controllers
                 }
                 var leavetype = mapo.Map<LeaveType>(model);
                 leavetype.DateCreated = DateTime.Now;
-                var isok=repo.Create(leavetype);
+                var isok= await repo.Create(leavetype);
                 if(!isok)
                 {
                     ModelState.AddModelError("", "something went wrong with insert");
@@ -83,14 +84,15 @@ namespace leave_managementPetar.Controllers
         }
 
         // GET: LeaveTypesController/Edit/5
-        public ActionResult Edit(int id)
+        public async Task<ActionResult> Edit(int id)
         {
-            if(!repo.isExists(id))
+            var isExists = await repo.isExists(id);
+            if (!isExists)
             {
                return NotFound();
             }
 
-            var leavetype = repo.FindById(id);
+            var leavetype =await repo.FindById(id);
             var model = mapo.Map<LeaveTypeVM>(leavetype);
 
             return View(model);
@@ -99,7 +101,7 @@ namespace leave_managementPetar.Controllers
         // POST: LeaveTypesController/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit(LeaveTypeVM model)
+        public async Task<ActionResult> Edit(LeaveTypeVM model)
         {
             try
             {
@@ -109,7 +111,7 @@ namespace leave_managementPetar.Controllers
                 }
                 var leavetype = mapo.Map<LeaveType>(model);
                 leavetype.DateCreated = DateTime.Now;
-                var isok = repo.Update(leavetype);
+                var isok =await repo.Update(leavetype);
                 if (!isok)
                 {
                     ModelState.AddModelError("", "something went wrong with update");
@@ -125,14 +127,14 @@ namespace leave_managementPetar.Controllers
         }
 
         // GET: LeaveTypesController/Delete/5
-        public ActionResult Delete(int id)
+        public async Task<ActionResult> Delete(int id)
         {
-            var leavetype = repo.FindById(id);
+            var leavetype =await repo.FindById(id);
             if (leavetype == null)
             {
                 return NotFound();
             }
-            var isok = repo.Delete(leavetype);
+            var isok =await repo.Delete(leavetype);
             if (!isok)
             {
 
@@ -144,17 +146,17 @@ namespace leave_managementPetar.Controllers
         // POST: LeaveTypesController/Delete/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Delete(int id,LeaveTypeVM model)
+        public async Task<ActionResult> Delete(int id,LeaveTypeVM model)
         {
             try
             {
                
-                var leavetype = repo.FindById(id);
+                var leavetype =await repo.FindById(id);
                 if (leavetype==null)
                 {
                     return NotFound();
                 }
-                var isok = repo.Delete(leavetype);
+                var isok =await repo.Delete(leavetype);
                 if (!isok)
                 {
                     
