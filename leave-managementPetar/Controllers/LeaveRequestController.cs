@@ -283,5 +283,10 @@ namespace leave_managementPetar.Controllers
                 return View();
             }
         }
+        protected override void Dispose(bool disposing)
+        {
+            _unitOfwork.Dispose();
+            base.Dispose(disposing);
+        }
     }
 }
