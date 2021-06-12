@@ -3,6 +3,7 @@ using leave_management.Contracts;
 using leave_managementPetar.Contracts;
 using leave_managementPetar.Data;
 using leave_managementPetar.Models;
+using leave_managementPetar.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -21,15 +22,17 @@ namespace leave_managementPetar.Controllers
         private readonly IUnitOfWork _unitOfwork;
         private readonly IMapper mapo;
         private readonly UserManager<Employee> _userManager;
+        private readonly IEmailSender email;
 
         public LeaveRequestController( 
             IMapper mapos,
             UserManager<Employee> userManager,
-            IUnitOfWork unitOfwork)
+            IUnitOfWork unitOfwork,IEmailSender em)
         {
             _userManager = userManager;
             mapo = mapos;
             _unitOfwork = unitOfwork;
+            email = em;
         }
 
         [Authorize(Roles = "Administrator")]
@@ -222,6 +225,9 @@ namespace leave_managementPetar.Controllers
                 await _unitOfwork.LeaveRequests.Create(leaveRequest);
                 await _unitOfwork.Save();
 
+                //Send email to supervisor to aprove
+                await email.SendEmailAsync("admin@gmail.com", "Leave Request to aprove",
+                     $"Please review this leave request. <a href='UrlOfApp/{leaveRequest.Id}'>Click Here</a>");
 
                 return RedirectToAction("MyLeave");
             }

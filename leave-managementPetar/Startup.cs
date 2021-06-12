@@ -4,6 +4,7 @@ using leave_managementPetar.Contracts;
 using leave_managementPetar.Data;
 using leave_managementPetar.Mappings;
 using leave_managementPetar.Repository;
+using leave_managementPetar.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -44,6 +45,10 @@ namespace leave_managementPetar
             services.AddScoped<ILeaveAllocationRepository, LeaveAllocationRepository>();
             //dodavanje na iunit of work
             services.AddTransient<IUnitOfWork, UnitOfWork>();
+
+            //Email Settings Section
+            services.Configure<EmailSettings>(Configuration.GetSection("EmailSettings"));
+            services.AddSingleton<IEmailSender, EmailSender>();
 
             services.AddAutoMapper(typeof(Maps));
 
