@@ -71,7 +71,7 @@ namespace leave_managementPetar
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
-                app.UseDatabaseErrorPage();
+               
             }
             else
             {
