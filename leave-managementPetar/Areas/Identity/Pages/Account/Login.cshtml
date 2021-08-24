@@ -5,9 +5,9 @@
     ViewData["Title"] = "Log in";
 }
 @*<div class="hold-transition login-page m-0">*@
-    <div class="login-box m-auto">
+    <div class="login-box m-auto w-25">
         <div class="login-logo">
-            <h1>Login </h1>
+            <h1>Sign In </h1>
         </div>
         <!-- /.login-logo -->
         <div class="card">
@@ -50,11 +50,11 @@
                     </div>
                 </form>
 
-                <p class="mb-1">
-                    <a asp-page="./ForgotPassword">I forgot my password</a>
+                <p class="mb-1 mt-5">
+                    <a class="btn btn-secondary btn-block" asp-page="./ForgotPassword">I forgot my password</a>
                 </p>
-                <p class="mb-0">
-                    <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl" class="text-center">Register</a>
+                <p class="mb-0 mt-3">
+                    <a class="btn btn-info btn-block text-center" asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl" >Register</a>
                 </p>
             </div>
             <!-- /.login-card-body -->

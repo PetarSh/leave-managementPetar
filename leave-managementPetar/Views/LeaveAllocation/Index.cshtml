@@ -8,11 +8,14 @@
 <h1>Index</h1>
 
 
-<table id="tblData" class="table">
+<table id="tblData" class="table bg-white">
     <thead>
         <tr>
             <th>
                 Leave Types
+            </th>
+            <th>
+                Number of days
             </th>
 
             <th>Action</th>
@@ -21,19 +24,21 @@
     <tbody>
         @foreach (var item in Model.LeaveTypes)
         {
-            <tr>
-                <td>
-                    @Html.DisplayFor(modelItem => item.Name)
-                </td>
-
-                <td>
-                    @*@Html.ActionLink("Allocate To Employees", "SetLeave", new {  id=item.Id  }, new { @class = "btn btn-success" })*@
-                    <a class="btn btn-outline-success" asp-action="SetLeave" asp-route-id="@item.Id">
-                        <i class="fa fa-pencil" aria-hidden="true"></i>
-                        Allocate To Employees
-                    </a>
-                </td>
-            </tr>
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.Name)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.DefaultDays)
+            </td>
+            <td>
+                @*@Html.ActionLink("Allocate To Employees", "SetLeave", new {  id=item.Id  }, new { @class = "btn btn-success" })*@
+                <a class="btn btn-primary" asp-action="SetLeave" asp-route-id="@item.Id">
+                    <i class="fa fa-pencil" aria-hidden="true"></i>
+                    Allocate To All Employees
+                </a>
+            </td>
+        </tr>
         }
     </tbody>
 </table>

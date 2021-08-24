@@ -24,6 +24,10 @@ a {
   border-color: #1861ac;
 }
 
+.znak{
+    font-size:100% !important;
+}
+
 /* Sticky footer styles
 -------------------------------------------------- */
 html {

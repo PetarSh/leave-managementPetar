@@ -19,12 +19,12 @@ namespace leave_managementPetar.Models
         [Display(Name = "Start Date")]
         [Required]
         [DataType(DataType.Date)]
-        [DisplayFormat(ApplyFormatInEditMode = true, DataFormatString = "{0:MM/dd/yyyy}")]
+       
         public DateTime StartDate { get; set; }
         [Display(Name = "End Date")]
         [Required]
         [DataType(DataType.Date)]
-        [DisplayFormat(ApplyFormatInEditMode = true, DataFormatString = "{0:MM/dd/yyyy}")]
+       
         public DateTime EndDate { get; set; }
         public LeaveTypeVM LeaveType { get; set; }
         public int LeaveTypeId { get; set; }
@@ -62,11 +62,11 @@ namespace leave_managementPetar.Models
 
         [Display(Name = "Start Date")]
         [Required]
-        [DisplayFormat(ApplyFormatInEditMode = true, DataFormatString = "{0:MM/dd/yyyy}")]
+        
         public string StartDate { get; set; }
         [Display(Name = "End Date")]
         [Required]
-        [DisplayFormat(ApplyFormatInEditMode = true, DataFormatString = "{0:MM/dd/yyyy}")]
+        
         public string EndDate { get; set; }
         public IEnumerable<SelectListItem> LeaveTypes { get; set; }
         [Display(Name = "Leave Type")]

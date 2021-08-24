@@ -6,17 +6,33 @@
 
 <h1>My Leave Allocations</h1>
 <div class="jumbotron">
-    <div class="card">
-        <ul class="list-group list-group-flush">
-            @foreach (var item in Model.LeaveAllocations)
-            {
-                <li class="list-group-item">
-                    <h6>@item.LeaveType.Name <span class="badge badge-secondary">@item.NumberOfDays</span></h6>
-                </li>
-            }
-        </ul>
-    </div>
+
+    @if (Model.LeaveAllocations.Count == 0)
+    {
+        <h4>You dont have any allocations</h4>
+    }
+
+
+    @if (Model.LeaveAllocations.Count > 0)
+    {
+<div class="card">
+    <ul class="list-group list-group-flush">
+        @foreach (var item in Model.LeaveAllocations)
+        {
+            <li class="list-group-item">
+                <h6>@item.LeaveType.Name <span class="badge badge-secondary">@item.NumberOfDays</span></h6>
+            </li>
+        }
+
+    </ul>
+
 </div>
+            }
+
+
+
+        
+    </div>
 
 
 <hr />
@@ -67,19 +83,19 @@
                 <td>
                     @if (item.Cancelled)
                     {
-                        <span class="badge badge-secondary">Cancelled</span>
+                        <span class="badge badge-pill badge-secondary" style="font-size:100%">Cancelled</span>
                     }
                     else if (item.Approved == true)
                     {
-                        <span class="badge badge-success">Approved</span>
+                        <span class="badge badge-pill badge-success" style="font-size:100%">Approved</span>
                     }
                     else if (item.Approved == false)
                     {
-                        <span class="badge badge-danger">Rejected</span>
+                        <span class="badge badge-pill badge-danger" style="font-size:100%">Rejected</span>
                     }
                     else
                     {
-                        <span class="badge badge-warning">Pending Approval</span>
+                        <span class="badge badge-pill badge-warning" style="font-size:100%">Pending Approval</span>
                     }
                 </td>
 

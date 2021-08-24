@@ -174,6 +174,9 @@ namespace leave_managementPetar.Controllers
         {
             try
             {
+                
+
+
                 var startDate = Convert.ToDateTime(model.StartDate);
                 var endDate = Convert.ToDateTime(model.EndDate);
                 var leaveTypes = await _unitOfwork.LeaveTypes.FindAll();
@@ -226,8 +229,8 @@ namespace leave_managementPetar.Controllers
                 await _unitOfwork.Save();
 
                 //Send email to supervisor to aprove
-                await email.SendEmailAsync("admin@gmail.com", "Leave Request to aprove",
-                     $"Please review this leave request. <a href='UrlOfApp/{leaveRequest.Id}'>Click Here</a>");
+                //await email.SendEmailAsync("admin@gmail.com", "Leave Request to aprove",
+                //     $"Please review this leave request. <a href='UrlOfApp/{leaveRequest.Id}'>Click Here</a>");
 
                 return RedirectToAction("MyLeave");
             }
