@@ -74,7 +74,34 @@ namespace leave_managementPetar.Controllers
             }
             return RedirectToAction(nameof(Index));
         }
-
+        public async Task<ActionResult> SetLeaveAdmins(int id)
+        {
+            //var leavetype =await typo.FindById(id);
+            var leavetype = await _unitOfwork.LeaveTypes.Find(q => q.Id == id);
+            var employees = await _userManager.GetUsersInRoleAsync("Administrator");
+            var period = DateTime.Now.Year;
+            foreach (var emp in employees)
+            {
+                //if (await _leaveallocationrepo.CheckAllocation(id, emp.Id))
+                if (await _unitOfwork.LeaveAllocations.isExists(q => q.EmployeeId == emp.Id
+                                        && q.LeaveTypeId == id
+                                        && q.Period == period))
+                    continue;
+                var allocation = new LeaveAllocationVM
+                {
+                    DateCreated = DateTime.Now,
+                    EmployeeId = emp.Id,
+                    LeaveTypeId = id,
+                    NumberOfDays = leavetype.DefaultDays,
+                    Period = DateTime.Now.Year
+                };
+                var leaveallocation = mapo.Map<LeaveAllocation>(allocation);
+                //await _leaveallocationrepo.Create(leaveallocation);
+                await _unitOfwork.LeaveAllocations.Create(leaveallocation);
+                await _unitOfwork.Save();
+            }
+            return RedirectToAction(nameof(Index));
+        }
 
         public async Task<ActionResult> ListEmployees()
         {

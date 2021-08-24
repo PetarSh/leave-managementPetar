@@ -32,10 +32,17 @@
                 @Html.DisplayFor(modelItem => item.DefaultDays)
             </td>
             <td>
-                @*@Html.ActionLink("Allocate To Employees", "SetLeave", new {  id=item.Id  }, new { @class = "btn btn-success" })*@
+               
                 <a class="btn btn-primary" asp-action="SetLeave" asp-route-id="@item.Id">
                     <i class="fa fa-pencil" aria-hidden="true"></i>
                     Allocate To All Employees
+                </a>
+            </td>
+            <td>
+               
+                <a class="btn btn-info" asp-action="SetLeaveAdmins" asp-route-id="@item.Id">
+                    <i class="fa fa-pencil" aria-hidden="true"></i>
+                    Allocate To Admins
                 </a>
             </td>
         </tr>
